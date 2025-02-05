@@ -51,14 +51,6 @@ Antes de rodar o projeto, certifique-se de ter:
    python bot_email.py
    ```
 
-## 🗄 Estrutura do Projeto
-```
-📂 bot-email/
- ├── bot_email.py        # Código principal do bot
- ├── config.py           # Configurações de banco e e-mail
- ├── requirements.txt    # Dependências do projeto
- ├── README.md           # Documentação
-```
 
 ## 📝 Como Funciona
 1. O bot acessa a caixa de entrada e busca e-mails não lidos.
