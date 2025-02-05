@@ -4,6 +4,7 @@ from email.header import decode_header
 import smtplib
 from email.mime.text import MIMEText
 import mysql.connector 
+import re
 
 IMAP_SERVER = "imap.gmail.com"
 IMAP_PORT = 993
@@ -21,7 +22,7 @@ DB_CONFIG = {
 }
 
 def conectar_banco():
-    """Função para conectar ao banco de dados."""
+    
     try:
         conn = mysql.connector.connect(**DB_CONFIG)
         return conn
@@ -30,7 +31,7 @@ def conectar_banco():
         return None
 
 def buscar_produto(nome_produto):
-    """Busca informações de um produto no banco de dados."""
+   
     conn = conectar_banco()
     if not conn:
         return "Erro ao acessar o banco de dados."
@@ -47,7 +48,7 @@ def buscar_produto(nome_produto):
         return "Desculpe, não encontramos informações sobre o produto solicitado."
 
 def buscar_emails():
-    """Busca e processa e-mails não lidos."""
+    
     mail = imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT)
     mail.login(EMAIL_USER, EMAIL_PASS)
     mail.select("inbox")
@@ -81,7 +82,7 @@ def buscar_emails():
     mail.logout()
 
 def enviar_resposta(destinatario, assunto, corpo):
-    """Envia uma resposta automática por e-mail."""
+    
     msg = MIMEText(corpo, "plain")
     msg["Subject"] = assunto
     msg["From"] = EMAIL_USER
@@ -95,13 +96,21 @@ def enviar_resposta(destinatario, assunto, corpo):
     print(f"Resposta enviada para {destinatario}")
 
 def encontrar_resposta_no_banco(mensagem):
-    """Encontra a resposta baseada na mensagem do usuário e no banco de dados."""
-    palavras = mensagem.split()
-    for palavra in palavras:
-        resposta = buscar_produto(palavra)
-        if "não encontramos informações" not in resposta:
-            return resposta
-    return "Obrigado por entrar em contato. Responderemos em breve."
+    padrao_produto = re.compile(r"preço do (.+?)|quanto custa o (.+?)|valor do (.+?)", re.IGNORECASE)
+    matches = padrao_produto.findall(mensagem)
+    respostas = []
+    
+    for match in matches:
+        produto = match[0] or match[1] or match[2]
+        if produto:
+            resposta = buscar_produto(produto.strip())
+            respostas.append(resposta)
+
+    if respostas:
+        return "\n".join(respostas)
+    return "Desculpe, não conseguimos identificar os produtos solicitados."
 
 if EMAIL_USER and EMAIL_PASS:
     buscar_emails()
+
+
